@@ -15,7 +15,7 @@ each screen against *your* task, not a blocklist, it's private by design, and it
 [![Privacy first](https://img.shields.io/badge/privacy-screenshots%20never%20leave-5fb85f?style=flat-square)](#privacy)
 [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)](LICENSE)
 
-<img src="preview.png" alt="Laser focus mode on Omarchy: a glowing reticle in the bar, the focus panel, and the locked-in window border" width="860">
+<img src="preview.png" alt="Laser on Omarchy: after drifting to YouTube, the window hazes over and the screen turns red with a back-to-task banner" width="860">
 
 </div>
 
@@ -49,8 +49,8 @@ edge, then a soft haze over the distracting window, and only then closes the tab
 
 | Locked in | Drifting |
 |---|---|
-| <img src="docs/locked-in.png" alt="Laser locked-in mode: the focused window glows green, other windows are dimmed" width="420"> | <img src="docs/red-edge.png" alt="Laser drift warning: red screen edge with a back-to-task banner" width="420"> |
-| The window you're working in glows; everything else fades back. | Two minutes off task: a red edge pulls you back to the task. |
+| <img src="docs/locked-in.png" alt="Laser locked-in mode: the focused window glows green, other windows are dimmed" width="420"> | <img src="docs/red-edge.png" alt="Laser drift warning: the distracting window hazes over, the screen turns red, and a banner says back to your task" width="420"> |
+| The window you're working in glows; everything else fades back. | Drift too long and the screen turns red while the distraction hazes over. |
 
 <img src="docs/panel-active.png" alt="Laser panel in the Omarchy bar showing the task, focus status and cost" width="560">
 

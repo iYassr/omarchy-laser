@@ -234,33 +234,37 @@ Item {
     onTriggered: Hyprland.refreshToplevels()
   }
 
+  // --- the red edge: a click-through overlay on every screen that breathes while you drift --
+
   Variants {
     model: Quickshell.screens
 
     PanelWindow {
-      id: fogWindow
+      id: driftWindow
       required property var modelData
       screen: modelData
+      // One overlay for the whole drift stage, so the red always sits above the haze.
       readonly property var ipc: root.fogTarget ? root.fogTarget.lastIpcObject : null
-      readonly property bool here: !!(ipc && ipc.at && ipc.size)
+      readonly property bool fogHere: !!(ipc && ipc.at && ipc.size)
         && ipc.at[0] < modelData.x + modelData.width && ipc.at[0] + ipc.size[0] > modelData.x
         && ipc.at[1] < modelData.y + modelData.height && ipc.at[1] + ipc.size[1] > modelData.y
-      visible: here && (root.fogAmount > 0 || haze.opacity > 0.01)
+      visible: root.tint || glow.opacity > 0.01 || (fogHere && haze.opacity > 0.01)
       color: "transparent"
       anchors { top: true; bottom: true; left: true; right: true }
       exclusionMode: ExclusionMode.Ignore
-      WlrLayershell.namespace: "laser-fog"
+      WlrLayershell.namespace: "laser-edge"
       WlrLayershell.layer: WlrLayer.Overlay
       WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
       mask: Region {}
 
+      // The haze: a live capture of just the distracting window, lightly blurred, drawn over it.
       Item {
         id: haze
-        x: fogWindow.here ? fogWindow.ipc.at[0] - fogWindow.modelData.x : 0
-        y: fogWindow.here ? fogWindow.ipc.at[1] - fogWindow.modelData.y : 0
-        width: fogWindow.here ? fogWindow.ipc.size[0] : 0
-        height: fogWindow.here ? fogWindow.ipc.size[1] : 0
-        opacity: root.fogAmount > 0 ? 1 : 0
+        x: driftWindow.fogHere ? driftWindow.ipc.at[0] - driftWindow.modelData.x : 0
+        y: driftWindow.fogHere ? driftWindow.ipc.at[1] - driftWindow.modelData.y : 0
+        width: driftWindow.fogHere ? driftWindow.ipc.size[0] : 0
+        height: driftWindow.fogHere ? driftWindow.ipc.size[1] : 0
+        opacity: driftWindow.fogHere && root.fogAmount > 0 ? 1 : 0
         Behavior on opacity { NumberAnimation { duration: 250 } }
 
         ScreencopyView {
@@ -281,25 +285,6 @@ Item {
           Behavior on blur { NumberAnimation { duration: 1500 } }
         }
       }
-    }
-  }
-
-  // --- the red edge: a click-through overlay on every screen that breathes while you drift --
-
-  Variants {
-    model: Quickshell.screens
-
-    PanelWindow {
-      required property var modelData
-      screen: modelData
-      visible: root.tint || glow.opacity > 0.01
-      color: "transparent"
-      anchors { top: true; bottom: true; left: true; right: true }
-      exclusionMode: ExclusionMode.Ignore
-      WlrLayershell.namespace: "laser-edge"
-      WlrLayershell.layer: WlrLayer.Overlay
-      WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-      mask: Region {}
 
       Item {
         id: glow
@@ -352,9 +337,11 @@ Item {
             GradientStop { position: 1; color: glow.red }
           }
         }
+        // A faint wash over the whole screen; it deepens once the haze kicks in.
         Rectangle {
           anchors.fill: parent
-          color: Qt.rgba(1, 0.1, 0.1, 0.07 * glow.pulse)
+          color: Qt.rgba(1, 0.1, 0.1, (0.07 + 0.16 * root.fogAmount) * glow.pulse)
+          Behavior on color { ColorAnimation { duration: 1500 } }
         }
 
         Rectangle {

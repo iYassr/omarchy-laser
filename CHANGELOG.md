@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2 (2026-10-08)
+
+- The haze and the red warning now share one overlay, so the red wash and the "back to your task" banner
+  always sit on top of the hazed window (the haze used to cover them)
+- The red wash deepens across the whole screen once the haze kicks in
+- New marketplace preview showing the full drift state
+
 ## 1.1.1 (2026-10-08)
 
 - Security: the focus task and drifted-to sites never appear in process arguments any more. The bar passes
