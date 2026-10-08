@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 (2026-10-08)
+
+- Security: the focus task and drifted-to sites never appear in process arguments any more. The bar passes
+  the task over stdin, and notifications use a built-in D-Bus client instead of `notify-send`.
+  Reported in marketplace review.
+- `laser start -` reads the task from stdin
+
 ## 1.1.0 (2026-10-08)
 
 - New escalation step: a soft haze over the distracting window (3 min gentle, 90 s strict), drawn from a

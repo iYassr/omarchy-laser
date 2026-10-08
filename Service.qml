@@ -61,10 +61,22 @@ Item {
 
   function run(args) { Quickshell.execDetached([cli].concat(args)) }
 
+  // The task goes over stdin, never argv: other local users can read any process's arguments.
   function start(task, minutes) {
-    var args = ["start"].concat([task])
-    if (minutes > 0) args = args.concat(["-m", String(minutes)])
-    run(args)
+    if (!task || startProcess.running) return
+    startProcess.task = task
+    startProcess.command = [cli, "start", "-"].concat(minutes > 0 ? ["-m", String(minutes)] : [])
+    startProcess.running = true
+  }
+
+  Process {
+    id: startProcess
+    property string task: ""
+    stdinEnabled: true
+    onStarted: {
+      write(task + "\n")
+      task = ""
+    }
   }
 
   // The key goes over stdin, never argv, so it can't show up in a process list.

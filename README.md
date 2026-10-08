@@ -79,8 +79,7 @@ omarchy plugin add https://github.com/iYassr/omarchy-laser --enable
 That puts the reticle in your bar. Click it, open ⚙, paste your
 [TypeSafe API key](https://typesafe.ai), and start a session.
 
-**Requirements.** Omarchy (Quickshell shell) on Hyprland, `python3` (3.11+), `hyprctl` and
-`notify-send` all ship with Omarchy. Balanced and Full privacy also need the `grim`, `tesseract` and
+**Requirements.** Omarchy (Quickshell shell) on Hyprland, `python3` (3.11+) and `hyprctl`, all of which ship with Omarchy. Balanced and Full privacy also need the `grim`, `tesseract` and
 `tesseract-data-eng` packages for on-device OCR. Without them, Laser still works from site names.
 
 **Optional CLI.** `ln -s ~/.config/omarchy/plugins/yasserdo.laser/bin/laser ~/.local/bin/laser`
@@ -202,8 +201,8 @@ Tests: `python3 -m unittest discover -s tests`
 
 Laser runs as your user with no extra privileges and talks to exactly one host (`api.typesafe.ai`)
 over verified TLS. Its files are owner-only, your key goes over stdin and is verified before saving, and
-web content is treated strictly as data. An end-to-end audit before release found 2 high, 3 medium and
-5 low issues, and all are fixed. See [SECURITY.md](SECURITY.md) for the threat model, the findings and
+web content is treated strictly as data, and nothing private ever appears in a process's command line.
+An end-to-end audit plus marketplace review found 2 high, 4 medium and 5 low issues, and all are fixed. See [SECURITY.md](SECURITY.md) for the threat model, the findings and
 private vulnerability reporting.
 
 ## FAQ

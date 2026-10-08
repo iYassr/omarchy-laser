@@ -20,7 +20,7 @@ rather than a public issue. You'll get a reply within a few days, and fixes are 
 | Live image of the distracting window (Quickshell screencopy) | the haze | rendered in the shell only, never stored or sent; only while that window is judged a distraction past the haze threshold |
 | Window border and dimming (`hyprctl eval`) | the locked-in look | runtime-only; originals saved and restored; only regex-validated hex colours and numbers reach the Lua string |
 | Closing a tab or window (`hyprctl dispatch`) | the last escalation step | browser tabs and web-app windows only, never native apps; only if the same window **and** title are still focused; off in *Warn only* |
-| Notifications (`notify-send`) | nudges | text is HTML-escaped and passed after `--` |
+| Notifications (session D-Bus) | nudges | sent over the owner-only session bus by a built-in client, never through a command line; text is HTML-escaped |
 
 Laser needs no root privileges, no privilege escalation, no background services outside the shell, no
 package installs at runtime and no third-party Python packages. It runs entirely as your user.
@@ -45,10 +45,14 @@ All files are owner-only: folders `0700`, files `0600`, created under `umask 077
 - It is **verified before saving**, so a typo can't replace a working key, and stored in `~/.config/laser/env` (`0600`).
 - It is never logged, never written to the state file or audit log, and never echoed in errors.
 - If supplied through `TYPESAFE_API_KEY`, it is removed from the environment at start-up, so child
-  processes (`hyprctl`, `grim`, `tesseract`, `notify-send`) don't inherit it.
+  processes (`hyprctl`, `grim`, `tesseract`) don't inherit it.
 
 ## Threat model
 
+0. **Process arguments are public.** Any local user can read every process's command line, so Laser never
+   puts private data there: tasks travel over stdin or the owner-only control socket, the API key over stdin,
+   and notifications over D-Bus. `laser start "<task>"` typed by hand is the one exception, which is your choice.
+   Use `laser start -` to read the task from stdin.
 1. **Hostile web content.** Page titles, page text and URLs are attacker-controlled. They are treated as
    data only. Subprocesses take argument lists with no shell. Lua strings never include them. Notification
    text is escaped. The bar tooltip is escaped, and the panel renders plain text only. A web page can, at
@@ -66,15 +70,16 @@ All files are owner-only: folders `0700`, files `0600`, created under `umask 077
 ## Audit, October 2026
 
 An end-to-end review, independent of the original implementation, covered every module, the QML and the
-packaging. All of the following were fixed before the first public release:
+packaging. All of the following are fixed:
 
 | Severity | Finding | Fix |
 |---|---|---|
 | High | After a tab switch inside one browser window, a stale verdict for the previous site could carry over to the new tab (e.g. while the API was unreachable) and lead to closing it | A window's last verdict is reused only for the same site |
 | High | Sensitive-site protection depended on resolving the tab's URL. Private windows or unsaved visits fell back to sending screen text | Chat, mail, banking and password pages are also recognised by title; tabs with an unknown site never send screen text |
+| Medium | Task text and drifted-to sites reached process arguments (`laser start "<task>"` from the bar, and `notify-send` bodies), which other local users can read *(reported in marketplace review)* | The bar passes the task over stdin; notifications go over the session D-Bus from a built-in client; nothing private is ever put on a command line |
 | Medium | Data files were created world-readable under the default umask | `umask 077`, `0700` folders, existing files tightened on start-up |
 | Medium | `python3 -m` imported modules from the current directory | `python3 -P -s` with a fixed path |
-| Low–Medium | Page titles could inject markup into notifications or the tooltip, or a leading `-` into `notify-send` options | HTML escaping and `--` |
+| Low–Medium | Page titles could inject markup into notifications or the tooltip | HTML escaping |
 | Low–Medium | Closing a native app window could lose unsaved work | Only browser tabs and web apps are ever closed |
 | Low | `inf`/`NaN` durations or probabilities could wedge the state file | Range and finiteness validation |
 | Low | Unbounded API responses and raw server text in the terminal | 64 KiB cap, control characters stripped |

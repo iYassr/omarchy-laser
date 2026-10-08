@@ -76,7 +76,8 @@ def cmd_status(args) -> None:
 
 
 def cmd_start(args) -> None:
-    task = " ".join(args.task).strip()
+    # "-" reads the task from stdin, so it never shows up in a process list (the bar does this).
+    task = sys.stdin.readline().strip() if args.task == ["-"] else " ".join(args.task).strip()
     call({"cmd": "start", "task": task, "minutes": args.minutes})
     print(f"🟢 Focusing on: {task}" + (f" for {args.minutes:g} min" if args.minutes else ""))
 
@@ -170,7 +171,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = p.add_subparsers(dest="command")
 
     s = sub.add_parser("start", help="start a focus session")
-    s.add_argument("task", nargs="+", help="what you're working on, in plain words")
+    s.add_argument("task", nargs="+", help="what you're working on, in plain words (or - to read it from stdin)")
     s.add_argument("-m", "--minutes", type=float, help="end automatically after this long")
     s.set_defaults(func=cmd_start)
     sub.add_parser("stop", help="end the session and show a summary").set_defaults(func=cmd_stop)
