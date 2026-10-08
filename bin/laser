@@ -1,0 +1,6 @@
+#!/bin/sh
+# Run Laser from wherever the plugin lives; needs only python3 (3.11+, stdlib).
+# -P: never import from the current directory. -s: ignore user site-packages. The inherited
+# PYTHONPATH is dropped too, so only Laser's own package can be imported as "laser".
+here="$(dirname "$(readlink -f "$0")")"
+PYTHONPATH="$here/.." exec python3 -P -s -m laser "$@"
