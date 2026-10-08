@@ -2,6 +2,8 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Hyprland
+import QtQuick.Effects
 
 // Runs the Laser daemon, mirrors its state file, and draws the red edge while you drift.
 // All judgement lives in the daemon (python, stdlib only); this displays and forwards clicks.
@@ -192,6 +194,79 @@ Item {
             duration: 4200
             easing.type: Easing.InOutSine
           }
+        }
+      }
+    }
+  }
+
+  // --- fog: after a few minutes on a distraction, a soft haze over that one window ---------
+  // A live capture of the window, lightly blurred and desaturated, drawn exactly over it and
+  // click-through. Deliberately minimal: it takes the shine off, it doesn't hide anything.
+  // Only that window, only while you're on it; switching to anything else clears it at once.
+
+  readonly property var fogState: state.fog || null
+  readonly property real fogAmount: active && fogState ? fogState.amount : 0
+  readonly property var fogTarget: {
+    if (!fogState) return null
+    var list = Hyprland.toplevels.values
+    for (var i = 0; i < list.length; i++)
+      if ("0x" + list[i].address === fogState.address) return list[i]
+    return null
+  }
+
+  Timer {  // keep the window's position fresh so the haze follows it if it moves
+    interval: 1000
+    running: root.fogState !== null
+    repeat: true
+    triggeredOnStart: true
+    onTriggered: Hyprland.refreshToplevels()
+  }
+
+  Variants {
+    model: Quickshell.screens
+
+    PanelWindow {
+      id: fogWindow
+      required property var modelData
+      screen: modelData
+      readonly property var ipc: root.fogTarget ? root.fogTarget.lastIpcObject : null
+      readonly property bool here: !!(ipc && ipc.at && ipc.size)
+        && ipc.at[0] < modelData.x + modelData.width && ipc.at[0] + ipc.size[0] > modelData.x
+        && ipc.at[1] < modelData.y + modelData.height && ipc.at[1] + ipc.size[1] > modelData.y
+      visible: here && (root.fogAmount > 0 || haze.opacity > 0.01)
+      color: "transparent"
+      anchors { top: true; bottom: true; left: true; right: true }
+      exclusionMode: ExclusionMode.Ignore
+      WlrLayershell.namespace: "laser-fog"
+      WlrLayershell.layer: WlrLayer.Overlay
+      WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+      mask: Region {}
+
+      Item {
+        id: haze
+        x: fogWindow.here ? fogWindow.ipc.at[0] - fogWindow.modelData.x : 0
+        y: fogWindow.here ? fogWindow.ipc.at[1] - fogWindow.modelData.y : 0
+        width: fogWindow.here ? fogWindow.ipc.size[0] : 0
+        height: fogWindow.here ? fogWindow.ipc.size[1] : 0
+        opacity: root.fogAmount > 0 ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 250 } }
+
+        ScreencopyView {
+          id: capture
+          anchors.fill: parent
+          captureSource: root.fogAmount > 0 && root.fogTarget ? root.fogTarget.wayland : null
+          live: true
+          visible: false
+        }
+        MultiEffect {
+          anchors.fill: parent
+          source: capture
+          visible: capture.hasContent
+          blurEnabled: true
+          blurMax: 12                       // a soft haze at most
+          blur: root.fogAmount
+          saturation: -0.3 * root.fogAmount
+          Behavior on blur { NumberAnimation { duration: 1500 } }
         }
       }
     }

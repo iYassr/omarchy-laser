@@ -17,6 +17,7 @@ rather than a public issue. You'll get a reply within a few days, and fixes are 
 | Pixels of the focused window (`grim` → `tesseract`) | on-device OCR for Balanced/Full | piped in memory, never written to disk; never for Strict, sensitive apps, or tabs whose site is unknown |
 | Browser history databases | to resolve a tab's site from its title | opened read-only (`immutable=1`), one parameterized query by exact title; query strings and fragments discarded |
 | Network | the Jev API | one constant host, `api.typesafe.ai:443`, TLS with certificate and hostname verification, no redirects, 64 KiB response cap |
+| Live image of the distracting window (Quickshell screencopy) | the haze | rendered in the shell only, never stored or sent; only while that window is judged a distraction past the haze threshold |
 | Window border and dimming (`hyprctl eval`) | the locked-in look | runtime-only; originals saved and restored; only regex-validated hex colours and numbers reach the Lua string |
 | Closing a tab or window (`hyprctl dispatch`) | the last escalation step | browser tabs and web-app windows only, never native apps; only if the same window **and** title are still focused; off in *Warn only* |
 | Notifications (`notify-send`) | nudges | text is HTML-escaped and passed after `--` |

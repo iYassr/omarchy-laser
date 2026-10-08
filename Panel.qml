@@ -318,11 +318,23 @@ Ui.Panel {
               showLabel: false
               value: root.settings.strictness || "gentle"
               options: [
-                {value: "gentle", label: "Gentle · nudge 1m, red 2m, close 4m"},
-                {value: "strict", label: "Strict · nudge 30s, red 1m, close 2m"},
+                {value: "gentle", label: "Gentle · nudge 1m, red 2m, haze 3m, limit 4m"},
+                {value: "strict", label: "Strict · nudge 30s, red 1m, haze 90s, limit 2m"},
                 {value: "warn_only", label: "Warn only · never closes anything"}
               ]
               onChanged: function(v) { root.setSetting("strictness", v) }
+            }
+
+            SectionTitle { text: "At the limit" }
+            Ui.Dropdown {
+              width: parent.width
+              showLabel: false
+              value: root.settings.final_step || "close"
+              options: [
+                {value: "close", label: "Close the tab (browsers and web apps only)"},
+                {value: "fog", label: "Keep it hazy · never close anything"}
+              ]
+              onChanged: function(v) { root.setSetting("final_step", v) }
             }
 
             SectionTitle { text: "Locked-in look" }

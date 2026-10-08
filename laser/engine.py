@@ -15,7 +15,8 @@ from laser.config import Config
 from laser.jev import PRICE_PER_INPUT_TOKEN, Verdict
 from laser.sense import Window
 
-LEVELS = ("ok", "warn", "nudge", "tint", "block")
+LEVELS = ("ok", "warn", "nudge", "tint", "fog", "block")
+FOG_RAMP_SECONDS = 30  # from a light haze to unreadable
 WEBAPP_PREFIXES = ("chrome-", "brave-", "msedge-", "vivaldi-", "chromium-")
 
 
@@ -141,7 +142,7 @@ class Engine:
         if s and s.blocks:
             s.blocks -= 1
             s.bucket = max(s.bucket, self.config.escalation.block)
-            s.level = 4
+            s.level = 5
             s.last_block = -1e9
 
     # --- observation ----------------------------------------------------------------------
@@ -179,7 +180,7 @@ class Engine:
             s.distractions[label] = s.distractions.get(label, 0.0) + dt
         else:
             s.other_s += dt
-        s.level = sum(s.bucket >= t for t in (esc.warn, esc.nudge, esc.tint, esc.block))
+        s.level = sum(s.bucket >= t for t in (esc.warn, esc.nudge, esc.tint, esc.fog, esc.block))
 
         actions: list = []
         if s.status != "distracted":
@@ -193,7 +194,7 @@ class Engine:
         # Only tabs and web apps are closed: a native app window may hold unsaved work.
         closable = window.cls in self.config.rules.browsers or window.cls.startswith(WEBAPP_PREFIXES)
         protected = not closable or window.cls in self.config.rules.never_close
-        if s.level >= 4 and esc.block_enabled and not protected and now - s.last_block >= 10:
+        if s.level >= 5 and esc.block_enabled and not protected and now - s.last_block >= 10:
             s.last_block, s.blocks = now, s.blocks + 1
             s.bucket = esc.tint  # stay hot: drifting straight back escalates quickly
             s.level = 3
@@ -215,6 +216,15 @@ class Engine:
         return "unsure"
 
     # --- reporting ------------------------------------------------------------------------
+
+    def _fog(self, s: Session) -> dict | None:
+        """Which window to fog and how hard (0..1). Only while you're on the distraction itself:
+        switching to anything else clears it at once."""
+        esc = self.config.escalation
+        if s.status != "distracted" or not s.window or s.bucket < esc.fog:
+            return None
+        amount = min(1.0, 0.25 + 0.75 * (s.bucket - esc.fog) / FOG_RAMP_SECONDS)
+        return {"address": s.window.address, "amount": round(amount, 2)}
 
     def summary(self, now: float) -> dict:
         s = self.session
@@ -260,6 +270,7 @@ class Engine:
             "level_index": s.level,
             "bucket": round(s.bucket, 1),
             "tint": s.status == "distracted" and s.level >= 3,
+            "fog": self._fog(s),
             "label": site_label(s.window, self.config.rules.browsers) if s.window else "",
             "p_on_task": round(s.verdict.p_on_task, 3) if s.verdict else None,
             "category": s.verdict.category if s.verdict else None,

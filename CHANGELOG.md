@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 (2026-10-08)
+
+- New escalation step: a soft haze over the distracting window (3 min gentle, 90 s strict), drawn from a
+  live local capture, deliberately minimal and cleared the instant you return to work
+- New setting "At the limit": close the tab (default) or keep it hazy and never close
+- `laser final close|fog`
+
 ## 1.0.0 (2026-10-08)
 
 First public release.

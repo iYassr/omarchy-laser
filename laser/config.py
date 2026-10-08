@@ -26,12 +26,13 @@ USAGE_FILE = DATA_DIR / "usage.json"
 AUDIT_FILE = DATA_DIR / "sent.jsonl"
 LOG_FILE = STATE_DIR / "laser.log"
 
-# Seconds of accumulated distraction before: red dot, notification, red screen edge, close.
-STRICTNESS = {
-    "gentle": (30, 60, 120, 240),
-    "strict": (10, 30, 60, 120),
-    "warn_only": (30, 60, 120, 240),
+# Seconds of accumulated distraction before each escalation step.
+STRICTNESS = {  # red reticle, notification, red edge, fog the window, close it
+    "gentle": (30, 60, 120, 180, 240),
+    "strict": (10, 30, 60, 90, 120),
+    "warn_only": (30, 60, 120, 180, 240),
 }
+FINAL_STEPS = ("close", "fog")  # at the limit: close the tab, or keep it fogged and never close
 
 
 @dataclass
@@ -39,6 +40,7 @@ class Escalation:
     warn: float = 30
     nudge: float = 60
     tint: float = 120
+    fog: float = 180
     block: float = 240
     renudge_every: float = 60
     decay_rate: float = 2.0  # focused seconds pay back distraction this many times faster
@@ -72,6 +74,7 @@ class Config:
     privacy: str = "balanced"
     strictness: str = "gentle"
     look: str = "full"  # the "locked in" screen: full, subtle or off
+    final_step: str = "close"
     sensitive: list[str] = field(default_factory=lambda: list(SENSITIVE_DEFAULT))
     poll_seconds: float = 2.0
     model: str = "jev-latest"
@@ -80,15 +83,18 @@ class Config:
     rules: Rules = field(default_factory=Rules)
 
     def apply_strictness(self) -> None:
-        self.escalation.warn, self.escalation.nudge, self.escalation.tint, self.escalation.block = STRICTNESS[self.strictness]
-        self.escalation.block_enabled = self.strictness != "warn_only"
+        e = self.escalation
+        e.warn, e.nudge, e.tint, e.fog, e.block = STRICTNESS[self.strictness]
+        e.block_enabled = self.strictness != "warn_only" and self.final_step == "close"
 
     def public(self) -> dict:
         """What the panel shows and may change."""
-        return {"privacy": self.privacy, "strictness": self.strictness, "look": self.look, "sensitive": self.sensitive}
+        return {"privacy": self.privacy, "strictness": self.strictness, "look": self.look,
+                "final_step": self.final_step, "sensitive": self.sensitive}
 
 
-EDITABLE = {"privacy": LEVELS, "strictness": tuple(STRICTNESS), "look": ("full", "subtle", "off")}
+EDITABLE = {"privacy": LEVELS, "strictness": tuple(STRICTNESS), "look": ("full", "subtle", "off"),
+            "final_step": FINAL_STEPS}
 
 
 def load() -> Config:
@@ -103,6 +109,8 @@ def load() -> Config:
         config.strictness = data["strictness"]
     if data.get("look") in EDITABLE["look"]:
         config.look = data["look"]
+    if data.get("final_step") in FINAL_STEPS:
+        config.final_step = data["final_step"]
     if isinstance(data.get("sensitive"), list):
         config.sensitive = [str(s) for s in data["sensitive"]]
     for name in ("never_close", "browsers", "neutral_classes"):

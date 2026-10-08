@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "yasserdo.laser",
   "name": "Laser",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "Yasser",
   "license": "MIT",
   "description": "Laser focus for Omarchy. Tell it what you're working on; it notices when you drift and pulls you back. Classified by TypeSafe Jev with your own API key, privacy-first.",

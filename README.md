@@ -34,7 +34,7 @@ and you can't say how you got there. Classic site blockers don't fit how people 
 Laser judges every screen **in the context of the task you declared**. Each check takes about half
 a second and costs a fraction of a cent, through [TypeSafe's Jev](https://docs.typesafe.ai), a fast
 classification model. When you drift it escalates gently, from a red dot to a nudge to a red screen
-edge, and only then closes the tab. While you're on task, the whole screen shows it: you're locked in.
+edge, then a soft haze over the distracting window, and only then closes the tab. While you're on task, the whole screen shows it: you're locked in.
 
 | You declared | On screen | Laser says |
 |---|---|---|
@@ -58,7 +58,8 @@ edge, and only then closes the tab. While you're on task, the whole screen shows
 
 - **🎯 Task-aware AI judging.** Every screen is checked against your own words, so the same site can be work in one session and a distraction in the next.
 - **🔒 Locked-in mode.** While you focus, your active window's border glows laser green, everything else dims, and a beam sweeps the bottom of the screen. It turns red the moment you drift, and your theme comes back when the session ends.
-- **📈 Gentle escalation.** Red reticle at 30 s, a notification at 1 min, a pulsing red screen edge at 2 min, the tab closed at 4 min. Only browser tabs and web apps are ever closed, never native apps. *Strict* halves the timings; *Warn only* never closes anything.
+- **📈 Gentle escalation.** Red reticle at 30 s, a notification at 1 min, a pulsing red screen edge at 2 min, a soft haze over the distracting window at 3 min, the tab closed at 4 min. Only browser tabs and web apps are ever closed, never native apps. *Strict* halves the timings, *Warn only* never closes anything, and *Keep it hazy* swaps closing for the haze.
+- **🌫️ Haze, not punishment.** At 3 minutes, just the window you drifted to fades into a light blur that takes the shine off a feed without hiding it. Switch back to work and it clears instantly. Nothing else on screen changes.
 - **🧠 Forgiving scoring.** A leaky bucket: real work pays back drift at twice the rate, so a glance doesn't reset you and a minute of work does.
 - **✋ One-click "it's on-task".** Click the nudge (or right-click the reticle) and that site counts as work for the rest of the session.
 - **🕵️ Privacy levels.** Strict, Balanced or Full. Chats, email, banking and password managers are always site-only, and screenshots never leave your machine. [Details](#privacy)
@@ -114,6 +115,7 @@ laser audit                   # exactly what was sent to Jev
 laser privacy strict|balanced|full
 laser strictness gentle|strict|warn_only
 laser look full|subtle|off
+laser final close|fog         # at the limit: close the tab, or keep it hazy
 laser key                     # set your API key (hidden prompt or stdin)
 ```
 
@@ -230,6 +232,14 @@ closed. Choose *Warn only* to never close anything, and use "it's on-task" to co
 
 Yes, that's the point. Describe your task and Laser judges the content against it. If it gets one
 wrong, click the nudge and that site is allowed for the rest of the session.
+</details>
+
+<details><summary><b>What's the haze?</b></summary>
+
+After three minutes on a distraction (gentle mode), Laser lays a light blur over that one window. It's
+drawn from a live capture of the window, on your machine, never saved or sent. It stays readable on
+purpose, because it's a nudge, not a wall. The moment you switch to on-task work it's gone. Choose *Keep it hazy* in ⚙ if
+you'd rather never have tabs closed.
 </details>
 
 <details><summary><b>What does "locked in" change on my screen?</b></summary>

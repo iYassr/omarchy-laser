@@ -45,6 +45,25 @@ class EngineTest(unittest.TestCase):
         self.assertTrue(blocks[0].browser)
         self.assertEqual(self.engine.session.level, 3)  # stays hot after a block
 
+    def test_fog_ramps_on_the_distraction_and_clears_on_switch(self):
+        _, t = run(self.engine, 176, YOUTUBE, OFF)
+        self.assertIsNone(self.engine.snapshot(t)["fog"])
+        _, t = run(self.engine, 4, YOUTUBE, OFF, start=t)
+        fog = self.engine.snapshot(t)["fog"]
+        self.assertEqual(fog["address"], YOUTUBE.address)
+        self.assertLess(fog["amount"], 0.5)
+        _, t = run(self.engine, 40, YOUTUBE, OFF, start=t)
+        self.assertEqual(self.engine.snapshot(t)["fog"]["amount"], 1.0)
+        self.engine.tick(t + 2, 2, EDITOR, ON, away=False)
+        self.assertIsNone(self.engine.snapshot(t + 2)["fog"])
+
+    def test_fog_only_never_closes(self):
+        self.engine.config.final_step = "fog"
+        self.engine.config.apply_strictness()
+        acts, t = run(self.engine, 600, YOUTUBE, OFF)
+        self.assertFalse(any(isinstance(a, Block) for a in acts))
+        self.assertEqual(self.engine.snapshot(t)["fog"]["amount"], 1.0)
+
     def test_brief_glance_back_does_not_reset(self):
         _, t = run(self.engine, 100, YOUTUBE, OFF)
         _, t = run(self.engine, 4, EDITOR, ON, start=t)
